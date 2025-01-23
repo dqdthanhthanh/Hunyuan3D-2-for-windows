@@ -2,6 +2,7 @@
 
 $port = ""
 $enable_t23d = $false
+$profile_set=3 #5 for highvarm, 4 for high, 3 for normal,2 for low, 1 for ultra
 
 # Activate python venv
 Set-Location $PSScriptRoot
@@ -36,6 +37,10 @@ if ($port) {
 
 if ($enable_t23d) {
   [void]$ext_args.Add("--enable_t23d")
+}
+
+if ($profile_set -ne 3) {
+  [void]$ext_args.Add("--profile=$profile_set")
 }
 
 python gradio_app.py $ext_args

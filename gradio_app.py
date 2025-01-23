@@ -92,7 +92,6 @@ def _gen_shape(
     seed=1234,
     octree_resolution=256,
     check_box_rembg=False,
-    return_dict = None
 ):
     if caption: print('prompt is', caption)
     save_folder = gen_save_folder()
@@ -104,8 +103,6 @@ def _gen_shape(
         start_time = time.time()
         try:
             image = t2i_worker(caption, seed)
-            if return_dict != None:
-                return_dict["image"] = image
         except Exception as e:
             raise gr.Error(f"Text to 3D is disable. Please enable it by `python gradio_app.py --enable_t23d`.")
         time_meta['text2image'] = time.time() - start_time
@@ -163,9 +160,7 @@ def generation_all(
         seed=seed,
         octree_resolution=octree_resolution,
         check_box_rembg=check_box_rembg,
-        return_dict= return_dict
     )
-    image = return_dict.get("image", image)
 
     path = export_mesh(mesh, save_folder, textured=False)
     model_viewer_html = build_model_viewer_html(save_folder, height=596, width=700)
