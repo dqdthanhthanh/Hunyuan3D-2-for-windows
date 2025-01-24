@@ -26,7 +26,7 @@ def get_example_txt_list():
 
 def gen_save_folder(max_size=60):
     os.makedirs(SAVE_DIR, exist_ok=True)
-    exists = set(int(_) for _ in os.listdir(SAVE_DIR) if not _.startswith("."))
+    exists = set(int(_) for _ in os.listdir(SAVE_DIR) if _.isdigit())
     cur_id = min(set(range(max_size)) - exists) if len(exists) < max_size else -1
     if os.path.exists(f"{SAVE_DIR}/{(cur_id + 1) % max_size}"):
         shutil.rmtree(f"{SAVE_DIR}/{(cur_id + 1) % max_size}")
@@ -72,10 +72,10 @@ def build_model_viewer_html(save_folder, height=660, width=790, textured=False):
     with open(output_html_path, 'w', encoding='utf-8') as f:
         f.write(template_html.replace('<model-viewer>', obj_html))
 
-
-    output_html_path = output_html_path.replace(SAVE_DIR + '/', '')
-    iframe_tag = f'<iframe src="/static/{output_html_path}" height="{height}" width="100%" frameborder="0"></iframe>'
-    print(f'Find html {output_html_path}, {os.path.exists(output_html_path)}')
+    rel_path = os.path.relpath(output_html_path, SAVE_DIR)
+    iframe_tag = f'<iframe src="/static/{rel_path}" height="{height}" width="100%" frameborder="0"></iframe>'
+    print(
+        f'Find html file {output_html_path}, {os.path.exists(output_html_path)}, relative HTML path is /static/{rel_path}')
 
     return f"""
         <div style='height: {height}; width: 100%;'>
@@ -333,6 +333,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, default=8080)
+    parser.add_argument('--host', type=str, default='0.0.0.0')
     parser.add_argument('--cache-path', type=str, default='gradio_cache')
     parser.add_argument('--enable_t23d', action='store_true')
     parser.add_argument('--profile', type=str, default="3")
@@ -413,4 +414,4 @@ if __name__ == '__main__':
 
     demo = build_app()
     app = gr.mount_gradio_app(app, demo, path="/")
-    uvicorn.run(app, host="127.0.0.1", port=args.port)
+    uvicorn.run(app, host=args.host, port=args.port)
