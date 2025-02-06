@@ -168,7 +168,7 @@ class Hunyuan3DDiTPipeline:
                     ckpt[model_name] = {}
                 ckpt[model_name][new_key] = value
         else:
-            ckpt = torch.load(ckpt_path, map_location='cpu', weights_only=True)
+            ckpt = torch.load(ckpt_path, map_location='cpu')
         # load model
         from accelerate import init_empty_weights
         with init_empty_weights():
