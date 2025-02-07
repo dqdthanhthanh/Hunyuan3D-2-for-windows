@@ -152,7 +152,8 @@ def generation_all(
     seed=1234,
     octree_resolution=256,
     check_box_rembg=False,
-    max_facenum = 40000
+    max_facenum = 40000,
+    texture_size = 1024
 ):
     mesh, image, save_folder = _gen_shape(
         caption,
@@ -168,6 +169,7 @@ def generation_all(
     path = export_mesh(mesh, save_folder, textured=False)
     model_viewer_html = build_model_viewer_html(save_folder, height=596, width=700)
 
+    texgen_worker.set_resolution(texture_size=texture_size)
     textured_mesh = texgen_worker(mesh, image)
     path_textured = export_mesh(textured_mesh, save_folder, textured=True)
     model_viewer_html_textured = build_model_viewer_html(save_folder, height=596, width=700, textured=True)
@@ -248,6 +250,7 @@ def build_app():
                     octree_resolution = gr.Dropdown([256, 384, 512, 768, 1024], value=256, label='Octree Resolution')
                     cfg_scale = gr.Number(value=5.5, label='Guidance Scale')
                     max_facenum_slider = gr.Slider(maximum=200000, minimum=20000, value=40000, step=1000, label='Number of Faces')
+                    texture_size = gr.Number(value=1024, label='Texture Size')
                     seed = gr.Slider(maximum=1e7, minimum=0, value=1234, label='Seed')
 
                 with gr.Group():
@@ -325,7 +328,8 @@ def build_app():
                 seed,
                 octree_resolution,
                 check_box_rembg,
-                max_facenum_slider
+                max_facenum_slider,
+                texture_size
             ],
             outputs=[file_out, file_out2, html_output1, html_output2]
         ).then(

@@ -94,6 +94,13 @@ class Hunyuan3DPaintPipeline:
 
         self.load_models()
 
+    def set_resolution(self, render_size=2048, texture_size=1024):
+        self.config.render_size = render_size
+        self.config.texture_size = texture_size
+        self.render = MeshRender(
+            default_resolution=render_size,
+            texture_size=texture_size)
+
     def load_models(self):
         # empty cude cache
         torch.cuda.empty_cache()
