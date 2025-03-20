@@ -1,13 +1,3 @@
-# Open Source Model Licensed under the Apache License Version 2.0
-# and Other Licenses of the Third-Party Components therein:
-# The below Model in this distribution may have been modified by THL A29 Limited
-# ("Tencent Modifications"). All Tencent Modifications are Copyright (C) 2024 THL A29 Limited.
-
-# Copyright (C) 2024 THL A29 Limited, a Tencent company.  All rights reserved.
-# The below software and/or models in this distribution may have been
-# modified by THL A29 Limited ("Tencent Modifications").
-# All Tencent Modifications are Copyright (C) THL A29 Limited.
-
 # Hunyuan 3D is licensed under the TENCENT HUNYUAN NON-COMMERCIAL LICENSE AGREEMENT
 # except for the third-party components listed below.
 # Hunyuan 3D does not impose any additional limitations beyond what is outlined
@@ -28,6 +18,7 @@ import numpy as np
 import os
 import torch
 from PIL import Image
+from typing import Union, Optional
 
 from .differentiable_renderer.mesh_render import MeshRender
 from .utils.dehighlight_utils import Light_Shadow_Remover
@@ -71,7 +62,10 @@ class Hunyuan3DPaintPipeline:
                 try:
                     import huggingface_hub
                     # download from huggingface
-                    model_path = huggingface_hub.snapshot_download(repo_id=original_model_path)
+                    model_path = huggingface_hub.snapshot_download(repo_id=original_model_path,
+                                                                   allow_patterns=["hunyuan3d-delight-v2-0/*"])
+                    model_path = huggingface_hub.snapshot_download(repo_id=original_model_path,
+                                                                   allow_patterns=["hunyuan3d-paint-v2-0/*"])
                     delight_model_path = os.path.join(model_path, 'hunyuan3d-delight-v2-0')
                     multiview_model_path = os.path.join(model_path, 'hunyuan3d-paint-v2-0')
                     return cls(Hunyuan3DTexGenConfig(delight_model_path, multiview_model_path))
@@ -107,7 +101,11 @@ class Hunyuan3DPaintPipeline:
         # Load model
         self.models['delight_model'] = Light_Shadow_Remover(self.config)
         self.models['multiview_model'] = Multiview_Diffusion_Net(self.config)
-        self.models['super_model'] = Image_Super_Net(self.config)
+        # self.models['super_model'] = Image_Super_Net(self.config)
+
+    def enable_model_cpu_offload(self, gpu_id: Optional[int] = None, device: Union[torch.device, str] = "cuda"):
+        self.models['delight_model'].pipeline.enable_model_cpu_offload(gpu_id=gpu_id, device=device)
+        self.models['multiview_model'].pipeline.enable_model_cpu_offload(gpu_id=gpu_id, device=device)
 
     def render_normal_multiview(self, camera_elevs, camera_azims, use_abs_coor=True):
         normal_maps = []
@@ -153,14 +151,14 @@ class Hunyuan3DPaintPipeline:
         texture = torch.tensor(texture_np / 255).float().to(texture.device)
 
         return texture
-    
+
     def recenter_image(self, image, border_ratio=0.2):
         if image.mode == 'RGB':
             return image
         elif image.mode == 'L':
             image = image.convert('RGB')
             return image
-        
+
         alpha_channel = np.array(image)[:, :, 3]
         non_zero_indices = np.argwhere(alpha_channel > 0)
         if non_zero_indices.size == 0:
@@ -195,7 +193,7 @@ class Hunyuan3DPaintPipeline:
             image_prompt = Image.open(image)
         else:
             image_prompt = image
-        
+
         image_prompt = self.recenter_image(image_prompt)
 
         image_prompt = self.models['delight_model'](image_prompt)
@@ -218,7 +216,7 @@ class Hunyuan3DPaintPipeline:
         multiviews = self.models['multiview_model'](image_prompt, normal_maps + position_maps, camera_info)
 
         for i in range(len(multiviews)):
-            multiviews[i] = self.models['super_model'](multiviews[i])
+            #     multiviews[i] = self.models['super_model'](multiviews[i])
             multiviews[i] = multiviews[i].resize(
                 (self.config.render_size, self.config.render_size))
 
