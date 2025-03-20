@@ -13,7 +13,7 @@ torchvision
 #ConfigArgParse
 #ipdb
 omegaconf
-
+diso
 #sentencepiece
 tqdm
 
@@ -35,9 +35,9 @@ accelerate
 gradio
 uvicorn
 fastapi
+mmgp==3.2.7
 uvicorn
 rembg
 onnxruntime
 #gevent
 #geventhttpclient
-mmgp==3.1.3
