@@ -33,7 +33,6 @@ accelerate
 
 # Demo only
 gradio
-uvicorn
 fastapi
 mmgp==3.2.7
 uvicorn
